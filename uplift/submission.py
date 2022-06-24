@@ -371,10 +371,10 @@ class UpliftTreeRegressor:
 
 """
 # Test using provided example data.
-ex_x = np.load('C:/Users/timot/Documents/GitHub/uplift_submission/uplift/examples/example_X.npy')
-ex_y = np.load('C:/Users/timot/Documents/GitHub/uplift_submission/uplift/examples/example_y.npy')
-ex_treat = np.load('C:/Users/timot/Documents/GitHub/uplift_submission/uplift/examples/example_treatment.npy')
-ex_preds = np.load('C:/Users/timot/Documents/GitHub/uplift_submission/uplift/examples/example_preds.npy')
+ex_x = np.load('examples/example_X.npy')
+ex_y = np.load('examples/example_y.npy')
+ex_treat = np.load('examples/example_treatment.npy')
+ex_preds = np.load('examples/example_preds.npy')
 reg = UpliftTreeRegressor(3, 6000, 2500, 2500)
 s = reg.fit(ex_x, ex_treat, ex_y)
 preds = reg.predict(ex_x)
