@@ -4,16 +4,7 @@ from typing import List, Tuple, Any
 
 
 def calc_uplift(treatment, target):
-    """
-    Function takes in treatment flags and target variable values and calculates uplift.
-
-            Parameters:
-                    treatment: ndarray - treatment flags
-                    target: ndarray - target variable values
-
-            Returns:
-                    uplift: float - difference between avg target value of treatment and avg target value of control
-    """
+    """Function takes in treatment flags and target variable values and calculates uplift."""
     control_idx = np.where(treatment == 0)[0]
     treated_idx = np.where(treatment == 1)[0]
     uplift = np.mean(np.take(target, treated_idx)) - np.mean(np.take(target, control_idx))
@@ -21,16 +12,7 @@ def calc_uplift(treatment, target):
 
 
 def pos_threshold(node, feature):
-    """
-    Function takes a node and a feature (int corresponding to column) and outputs possible threshold values.
-
-            Parameters:
-                node: Node of Uplift Tree
-                feature: int - column idx of feature data
-
-            Returns:
-                threshold_options: ndarray - possible threshold values to split data into left/right
-    """
+    """Function takes a node and a feature (int corresponding to column) and outputs possible threshold values."""
     column_values = node.data[:, feature]
     unique_values = np.unique(column_values)
     if len(unique_values) > 10:
@@ -46,26 +28,12 @@ def make_split(node, feature, threshold):
     Function takes a node, feature (int corresponding to column), and threshold value to split data into left
     (<= threshold) and right (> threshold) groups. Also, keeps track of and outputs treatment flags and target variable
     values in new split data.
-
-            Parameters:
-                    node: Node of Uplift Tree
-                    feature: int - column idx of feature data
-                    threshold: float - possible threshold value as found by function pos_threshold
-
-            Returns:
-                    data_left: ndarray - data points with feature <= threshold
-                    data_right: ndarray - data points with feature > threshold
-                    treatment_left: ndarray - treatment flags for data_left
-                    treatment_right: ndarray - treatment flags for data_right
-                    target_left: ndarray - target variable values for data_left
-                    target_right: ndarray - target variable values for data_right
     """
     treatment = node.treatment
     target = node.target
     column_values = node.data[:, feature]
 
-    # Find indices of treatment and control groups:
-    left_idx = np.where(column_values <= threshold)[0]
+    left_idx = np.where(column_values <= threshold)[0]          # Find indices of treatment and control groups:
     right_idx = np.where(column_values > threshold)[0]
 
     # Keep track of left/right data corresponding treatment flags and target variable variables after split.
@@ -79,18 +47,7 @@ def make_split(node, feature, threshold):
 
 
 def calc_ddp(treatment_left, treatment_right, target_left, target_right):
-    """
-    Function takes left and right treatment flags and target variable values to calculate DeltaDeltaP.
-
-            Parameters:
-                    treatment_left: ndarray - treatment flags for left data of split
-                    treatment_right: ndarray - treatment flags for right data of split
-                    target_left: ndarray - target variable values for left data of split
-                    target_right: ndarray - target variable values for right data of split
-
-            Returns:
-                    difference: float - DeltaDeltaP value (difference between uplifts of right and left data groups)
-    """
+    """Function takes left and right treatment flags and target variable values to calculate DeltaDeltaP."""
     uplift_left = calc_uplift(treatment_left, target_left)
     uplift_right = calc_uplift(treatment_right, target_right)
     difference = uplift_right - uplift_left
@@ -100,7 +57,6 @@ def calc_ddp(treatment_left, treatment_right, target_left, target_right):
 class Node:
     """
     A class to represent a node of an Uplift Tree.
-
     ...
 
     Attributes
@@ -135,17 +91,7 @@ class Node:
     """
 
     def __init__(self, data, treatment, target):
-        """
-        Initializes all necessary Node attributes.
-
-                Parameters:
-                        data: ndarray - feature data
-                        treatment: ndarray - treatment flags
-                        target: ndarray - target variable values
-
-                Returns:
-                        None
-        """
+        """Initializes all necessary Node attributes."""
         self.left = None
         self.right = None
         self.data = data
@@ -163,14 +109,7 @@ class Node:
         self.ATE = np.mean(np.take(self.target, treated, axis=0)) - np.mean(np.take(self.target, control, axis=0))
 
     def print_node(self):
-        """
-        Print nodes in form of tree following format of example_tree.txt.
-
-                Parameters:
-                        N/A
-                Returns:
-                        None
-        """
+        """Print nodes in form of tree following format of example_tree.txt."""
         indent = "\t" * self.depth
         n_items = "n_items: " + str(len(self.data))
         ate = "ATE: " + str(self.ATE)
@@ -188,6 +127,7 @@ class Node:
 class UpliftTree:
     """
     A class to represent an Uplift Tree.
+    ...
 
     Attributes
     ----------
@@ -210,40 +150,15 @@ class UpliftTree:
 
     def __init__(self, max_depth, min_samples_leaf, min_samples_leaf_treated, min_samples_leaf_control, data,
                  treatment, target):
-        """
-        Initializes all necessary UpliftTree attributes.
-
-                Parameters:
-                        max_depth: int - maximum depth of tree
-                        min_samples_leaf: int - minimum # data points in a (child) node for a split to be considered
-                        min_samples_leaf_treated: int - minimum # data points in a (child) node's treatment group for a
-                            split to be considered
-                        min_samples_leaf_control: int - minimum # data points in a (child) node's control group for a
-                            split to be considered
-                        data: ndarray - feature data of root node
-                        treatment: ndarray - treatment flags of root node
-                        target: ndarray - target variable values of root node
-
-                Returns:
-                        None
-        """
+        """Initializes all necessary UpliftTree attributes."""
         self.root = Node(data, treatment, target)
-        # self.depth = 0
         self.max_depth = max_depth
         self.min_samples_leaf = min_samples_leaf
         self.min_samples_leaf_treated = min_samples_leaf_treated
         self.min_samples_leaf_control = min_samples_leaf_control
 
     def build(self, node):
-        """
-        Recursively builds the Uplift Tree. Uses check of whether a node's best feature is None.
-
-                Parameters:
-                        node: Node of Uplift Tree
-
-                Returns:
-                        None
-        """
+        """Recursively builds the Uplift Tree. Uses check of whether a node's best feature is None."""
         best_feature = None
         best_threshold = None
         # Check if reached max depth. Each node keeps track of its depth in the tree.
@@ -299,6 +214,7 @@ class UpliftTree:
 class UpliftTreeRegressor:
     """
     A class to represent Uplift Tree Regressor.
+    ...
 
     Attributes
     ----------
@@ -321,6 +237,7 @@ class UpliftTreeRegressor:
         Computes prediction values for a dataset
     """
     def __init__(self, max_depth=3, min_samples_leaf=1000, min_samples_leaf_treated=300, min_samples_leaf_control=300):
+        """Initializes all necessary UpliftTreeRegressor attributes."""
         self.max_depth = max_depth
         self.min_samples_leaf = min_samples_leaf
         self.min_samples_leaf_treated = min_samples_leaf_treated
@@ -328,31 +245,13 @@ class UpliftTreeRegressor:
         self.tree = None
 
     def fit(self, data, treatment, target):
-        """
-        Builds and fits Uplift Tree.
-
-                Parameters:
-                        data: ndarray - feature data to fit Uplift Tree
-                        treatment: ndarray - treatment flags to fit Uplift Tree
-                        target: ndarray - target variable values to fit Uplift Tree
-
-                Returns:
-                        None
-        """
+        """Builds and fits Uplift Tree, taking root feature data, treatment flags, and target values as inputs."""
         self.tree = UpliftTree(self.max_depth, self.min_samples_leaf, self.min_samples_leaf_treated,
                                self.min_samples_leaf_control, data, treatment, target)
         self.tree.build(self.tree.root)
 
     def predict(self, X):
-        """
-        Computes prediction values for a dataset.
-
-                Parameters:
-                        X: ndarray - feature data to be predicted on
-
-                Returns:
-                        Predictions: ndarray - predicted ATE values for each data point using fitted Uplift Tree
-        """
+        """Computes prediction values for a dataset using fitted Uplift Tree."""
         predictions = []
         for point in X:
             current = self.tree.root
